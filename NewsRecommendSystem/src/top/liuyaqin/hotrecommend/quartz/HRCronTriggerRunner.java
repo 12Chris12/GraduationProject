@@ -1,0 +1,65 @@
+/**
+ * 
+ */
+package top.liuyaqin.hotrecommend.quartz;
+
+import java.util.List;
+
+import org.quartz.*;
+import org.quartz.impl.JobDetailImpl;
+import org.quartz.impl.StdSchedulerFactory;
+
+import static org.quartz.SimpleScheduleBuilder.simpleSchedule;
+import static org.quartz.TriggerBuilder.newTrigger;
+
+/**
+ * @author liuyaqin
+ * @email tomqianmaple@gmail.com
+ * @github https://github.com/bluemapleman
+ * @date 2016年11月23日
+ */
+public class HRCronTriggerRunner
+{
+	public void task(List<Long> users,String cronExpression) throws SchedulerException
+    {
+        // Initiate a Schedule Factory
+        SchedulerFactory schedulerFactory = new StdSchedulerFactory();
+        // Retrieve a scheduler from schedule factory
+        Scheduler scheduler = schedulerFactory.getScheduler();
+        
+        // Initiate JobDetail with job name, job group, and executable job class
+        JobDetailImpl jobDetailImpl = 
+        	new JobDetailImpl();
+        jobDetailImpl.setJobClass(HRJob.class);
+        jobDetailImpl.setKey(new JobKey("HRJob1"));
+        jobDetailImpl.getJobDataMap().put("users",users);
+        // Initiate CronTrigger with its name and group name
+//        CronTriggerImpl cronTriggerImpl = new CronTriggerImpl();
+//        cronTriggerImpl.setName("HRCronTrigger1");
+
+        //定义基于热点推荐触发器
+        //每隔十秒推荐一次
+        Trigger trigger = newTrigger()
+                .withIdentity("HRCronTrigger1", "HRJob1")
+                .startNow()
+                .withSchedule(simpleSchedule()
+                        .withIntervalInSeconds(100)
+                        .repeatForever())
+                .build();
+        
+        try {
+            // setup CronExpression
+//            CronExpression cexp = new CronExpression(cronExpression);
+//            // Assign the CronExpression to CronTrigger
+//            cronTriggerImpl.setCronExpression(cexp);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        // schedule a job with JobDetail and Trigger
+        scheduler.scheduleJob(jobDetailImpl, trigger);
+        
+        // start the scheduler
+        scheduler.start();
+    }
+}
+
